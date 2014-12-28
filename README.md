@@ -34,6 +34,6 @@ is where ```__main__.exe``` needs to end up for the app to find it.
 Linux build
 -----------
 
-Uses qmake (and make). Simply run make from project's top-level directory.
+Uses qmake (and make). Simply run ```make release``` from the project's top-level directory.
 Requires Qt5. Expects a python installation on the system. youtube-dl package
 is bundled with this application.

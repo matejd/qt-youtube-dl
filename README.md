@@ -1,7 +1,8 @@
 qt-youtube-dl
 -------------
 
-This is a tiny Qt/C++ GUI frontend for the youtube-dl tool.
+This is a tiny Qt/C++ GUI frontend for the [youtube-dl](https://github.com/rg3/youtube-dl/) tool.
+youtube-dl downloads videos from youtube.com and *many* other video hosting platforms.
 Windows & Linux supported.
 
 
@@ -16,9 +17,10 @@ Windows 10
 Windows downloads and build
 ---------------------------
 
+Latest Windows x64 installer can be found under [releases](https://github.com/matejd/qt-youtube-dl/releases).
+
 If you want to build this app yourself on Windows, you'll need a couple of things:
 - Qt5, grab an installer [here](http://www.qt.io/download-open-source/)
-- Visual Studio (just the compiler actually), I suggest [Community 2013](http://www.visualstudio.com/en-us/products/visual-studio-community-vs)
 - Python
 - cx\_Freeze ([link](http://cx-freeze.sourceforge.net/))
 - Inno Setup, if you want to create an installer
@@ -35,5 +37,5 @@ Linux build
 -----------
 
 Uses qmake (and make). Simply run ```make release``` from the project's top-level directory.
-Requires Qt5. Expects a python installation on the system. youtube-dl package
-is bundled with this application.
+Requires ```Qt5```. Expects a python installation on the system. youtube-dl package
+is bundled with the repository.

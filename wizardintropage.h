@@ -1,5 +1,7 @@
-#ifndef INTROWIZARDPAGE_H
-#define INTROWIZARDPAGE_H
+#ifndef WIZARDINTRO_H
+#define WIZARDINTRO_H
+
+#include "wizardcommon.h"
 
 #include <QWizardPage>
 #include <QLabel>
@@ -12,7 +14,7 @@
 #include <QUrl>
 #include <QSettings>
 
-class IntroWizardPage : public QWizardPage
+class WizardIntroPage : public QWizardPage
 {
     Q_OBJECT
 
@@ -22,7 +24,7 @@ private:
     QCheckBox* m_sameFolderCheckBox = nullptr;
 
 public:
-    explicit IntroWizardPage(QWidget* p = 0): QWizardPage(p)
+    explicit WizardIntroPage(QWidget* p = nullptr): QWizardPage(p)
     {
         setSubTitle("Paste the URL of the page with video you"\
                     " want to download. You can also" \
@@ -31,13 +33,13 @@ public:
         QLabel* urlLabel = new QLabel();
         urlLabel->setText("URL:");
         m_urlLineEdit = new QLineEdit();
-        registerField("url*", m_urlLineEdit);
+        registerField(FIELD_URL_REGISTER, m_urlLineEdit);
 
         m_formatCheckBox = new QCheckBox("Pick the best available format");
         m_sameFolderCheckBox = new QCheckBox("Same destination folder as last time");
-        registerField("sameFolder", m_sameFolderCheckBox);
+        registerField(FIELD_SAME_FOLDER, m_sameFolderCheckBox);
 
-        connect(m_formatCheckBox, SIGNAL(clicked()), this, SLOT(onCheckboxChecked()));
+        connect(m_formatCheckBox,     SIGNAL(clicked()), this, SLOT(onCheckboxChecked()));
         connect(m_sameFolderCheckBox, SIGNAL(clicked()), this, SLOT(onCheckboxChecked()));
 
         QHBoxLayout* urlLayout = new QHBoxLayout();
@@ -67,18 +69,18 @@ public:
 
         // First session ever, user has not yet selected a folder.
         const QSettings persistentSettings;
-        if (!persistentSettings.contains("folderWizardPage/destFolder"))
+        if (!persistentSettings.contains(SETTING_DEST_FOLDER))
             m_sameFolderCheckBox->setEnabled(false);
         else
             m_sameFolderCheckBox->setEnabled(true);
 
-        m_formatCheckBox->setChecked(persistentSettings.value("introWizardPage/bestFormat", true).toBool());
-        m_sameFolderCheckBox->setChecked(persistentSettings.value("introWizardPage/sameFolder", false).toBool());
+        m_formatCheckBox->setChecked(persistentSettings.value(SETTING_BEST_FORMAT, true).toBool());
+        m_sameFolderCheckBox->setChecked(persistentSettings.value(SETTING_SAME_FOLDER, false).toBool());
 
         // Fields are reset every time the wizard is started.
         // We need to set "folder" to the current value (otherwise "folder" field
         // is reset to the value on app startup, which can be old).
-        setField("folder", persistentSettings.value("folderWizardPage/destFolder", "").toString());
+        setField(FIELD_FOLDER, persistentSettings.value(SETTING_DEST_FOLDER, "").toString());
     }
 
     int nextId() const override
@@ -88,8 +90,8 @@ public:
         if (bestFormat && sameFolder)
             return -1; // Nothing more to do.
         if (bestFormat)
-            return 2;  // Go to folderWizardPage.
-        return 1;      // Go to videoFormatsPage.
+            return PAGE_ID_FOLDER;
+        return PAGE_ID_FORMATS;
     }
 
 private slots:
@@ -98,8 +100,8 @@ private slots:
         const bool bestFormat = m_formatCheckBox->isChecked();
         const bool sameFolder = m_sameFolderCheckBox->isChecked();
         QSettings persistentSettings;
-        persistentSettings.setValue("introWizardPage/bestFormat", bestFormat);
-        persistentSettings.setValue("introWizardPage/sameFolder", sameFolder);
+        persistentSettings.setValue(SETTING_BEST_FORMAT, bestFormat);
+        persistentSettings.setValue(SETTING_SAME_FOLDER, sameFolder);
 
         // When both "best format" and "same folder" are checked,
         // this page is the last page of the wizard.
@@ -110,4 +112,4 @@ private slots:
     }
 };
 
-#endif // INTROWIZARDPAGE_H
+#endif

@@ -2,6 +2,7 @@
 #define DOWNLOADWIZARD_H
 
 #include "youtubedl.h"
+#include "wizardcommon.h"
 
 #include <QAbstractButton>
 #include <QWizard>
@@ -15,7 +16,7 @@
 #include <QGroupBox>
 #include <QFontDatabase>
 
-class VideoFormatsWizardPage : public QWizardPage
+class WizardFormatsPage : public QWizardPage
 {
     Q_OBJECT
 
@@ -26,7 +27,7 @@ private:
     QMap<QObject*, QString> m_radioFormat; // Mapping radioButton => formatId.
 
 public:
-    explicit VideoFormatsWizardPage(QWidget* p = 0): QWizardPage(p)
+    explicit WizardFormatsPage(QWidget* p = nullptr): QWizardPage(p)
     {
         m_scrollArea = new QScrollArea();
         m_scrollArea->setWidgetResizable(true);
@@ -36,7 +37,7 @@ public:
         // Add a dummy QLineEdit. We'll attach a field to it.
         m_hiddenFormatEdit = new QLineEdit();
         m_hiddenFormatEdit->setHidden(true);
-        registerField("format", m_hiddenFormatEdit);
+        registerField(FIELD_FORMAT, m_hiddenFormatEdit);
         m_hiddenFormatEdit->setText("best"); // Best video format (default).
 
         QVBoxLayout* mainLayout = new QVBoxLayout();
@@ -49,7 +50,6 @@ public:
     void initializePage() override
     {
         setSubTitle("Retrieving video formats...");
-
         if (m_formatsGroupBox != nullptr) {
             // This *should* delete all children as well (radio buttons).
             delete m_formatsGroupBox;
@@ -67,9 +67,9 @@ public:
 
     int nextId() const override
     {
-        if (field("sameFolder").toBool())
-            return -1;
-        return 2;
+        if (field(FIELD_SAME_FOLDER).toBool())
+            return -1; // Finish.
+        return PAGE_ID_FOLDER;
     }
 
 private slots:
@@ -79,7 +79,7 @@ private slots:
         QAbstractButton* const nextButton = wizard()->button(QWizard::NextButton);
         QAbstractButton* const cancelButton = wizard()->button(QWizard::CancelButton);
         QAbstractButton* const finishButton = wizard()->button(QWizard::FinishButton);
-        const QString url = field("url").toString();
+        const QString url = field(FIELD_URL).toString();
 
         // Temporary disable wizard's buttons, since the network request might take a while.
         backButton->setEnabled(false);
@@ -117,7 +117,7 @@ private slots:
             formatRadioButton->setFont(fixedFont);
             if (!oneButtonChecked) {
                 formatRadioButton->setChecked(true);
-                setField("format", format.id);
+                setField(FIELD_FORMAT, format.id);
                 oneButtonChecked = true;
             }
             m_formatsGroupBox->layout()->addWidget(formatRadioButton);
@@ -137,7 +137,7 @@ private slots:
         QObject* sender = QObject::sender();
         Q_ASSERT(sender != nullptr);
         Q_ASSERT(m_radioFormat.contains(sender));
-        setField("format", m_radioFormat.value(sender));
+        setField(FIELD_FORMAT, m_radioFormat.value(sender));
     }
 };
 

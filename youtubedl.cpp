@@ -70,7 +70,6 @@ void downloadVideo(const QString& url, const QString& format, const QString& des
 #else
     const QString binPath = "python";
     const QString outTemplate = destFolder + "/%(title)s-%(id)s.%(ext)s";
-    // FIXME: outTemplate when destFolder not absolute? Windows?
     QStringList args;
     args << "youtube_dl/__main__.py" << "--format" << format << "--output" << outTemplate << url;
 #endif

@@ -11,10 +11,10 @@ SOURCES += main.cpp\
            youtubedl.cpp
 
 HEADERS += mainwindow.h \
-    youtubedl.h \
-    videoformatspage.h \
-    introwizardpage.h \
-    folderwizardpage.h
+           youtubedl.h \
+           wizardintropage.h \
+           wizardformatspage.h \
+           wizardfolderpage.h
 
 FORMS += mainwindow.ui
 

@@ -1,8 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "introwizardpage.h"
-#include "videoformatspage.h"
-#include "folderwizardpage.h"
+#include "wizardintropage.h"
+#include "wizardformatspage.h"
+#include "wizardfolderpage.h"
 
 #include <QWizard>
 #include <QLabel>
@@ -26,9 +26,9 @@ MainWindow::MainWindow(QWidget* parent) :
     m_ui->statusTableWidget->setColumnWidth(0, 400);
 
     m_downloadWizard = new QWizard();
-    m_downloadWizard->setPage(0, new IntroWizardPage());
-    m_downloadWizard->setPage(1, new VideoFormatsWizardPage());
-    m_downloadWizard->setPage(2, new FolderWizardPage());
+    m_downloadWizard->setPage(PAGE_ID_INTRO,   new WizardIntroPage());
+    m_downloadWizard->setPage(PAGE_ID_FORMATS, new WizardFormatsPage());
+    m_downloadWizard->setPage(PAGE_ID_FOLDER,  new WizardFolderPage());
     m_downloadWizard->setWindowTitle("Download Wizard");
     m_downloadWizard->setFixedSize(QSize(800, 400));
     m_downloadWizard->setModal(true);
@@ -59,9 +59,9 @@ void MainWindow::onDownloadWizardFinished(int result)
     if (result != 1)
         return;
 
-    const QString url    = m_downloadWizard->field("url").toString();
-    const QString folder = m_downloadWizard->field("folder").toString();
-    const QString format = m_downloadWizard->field("format").toString();
+    const QString url    = m_downloadWizard->field(FIELD_URL).toString();
+    const QString format = m_downloadWizard->field(FIELD_FORMAT).toString();
+    const QString folder = m_downloadWizard->field(FIELD_FOLDER).toString();
     if (m_urlRow.contains(url)) {
         QMessageBox box;
         box.setText("This URL is already being downloaded!");
@@ -98,7 +98,7 @@ void MainWindow::updateDownloadProgress(QString url, int progressPercent)
     const int destRow = m_urlRow.value(url);
     QTableWidgetItem* item = m_ui->statusTableWidget->item(destRow, 1);
 
-    QString progressStr = QString::number(progressPercent) + "%";
+    QString progressStr = QString("%1%").arg(progressPercent);
     if (progressPercent < 0) {
         progressStr = "Error";
         m_urlRow.remove(url);

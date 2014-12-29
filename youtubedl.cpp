@@ -5,9 +5,14 @@
 #include <QTextCodec>
 #include <QRegularExpression>
 #include <QtGlobal>
+#include <QScopedPointer>
 
 QList<VideoFormat> getVideoFormats(const QString& url)
 {
+    /// Run youtube_dl as a script in another process,
+    /// capture all of the stdout and parse it.
+    /// Returns a list of video formats, which are just
+    /// pairs of strings (format id, description).
 #ifdef Q_OS_WIN
     const QString binPath = "youtube_dl_frozen\\__main__.exe";
     QStringList args;
@@ -17,7 +22,7 @@ QList<VideoFormat> getVideoFormats(const QString& url)
     QStringList args;
     args << "youtube_dl/__main__.py" << "--list-formats" << url;
 #endif
-    QProcess* pythonProcess = new QProcess();
+    QScopedPointer<QProcess> pythonProcess(new QProcess());
     pythonProcess->setProcessChannelMode(QProcess::MergedChannels);
     pythonProcess->start(binPath, args);
     const bool success = pythonProcess->waitForFinished();
@@ -27,7 +32,6 @@ QList<VideoFormat> getVideoFormats(const QString& url)
     }
 
     // Parse stdout lines for video formats.
-    // TODO: be more future-proof!
     const QByteArray processStdoutEncoded = pythonProcess->readAllStandardOutput();
     const QTextCodec* utfCodec = QTextCodec::codecForName("UTF-8");
     const QString processStdout = utfCodec->toUnicode(processStdoutEncoded);
@@ -47,12 +51,17 @@ QList<VideoFormat> getVideoFormats(const QString& url)
             linesWithFormats = true;
     }
 
-    delete pythonProcess;
     return formats;
 }
 
 void downloadVideo(const QString& url, const QString& format, const QString& destFolder, QObject* watcher)
 {
+    /// Starts another process which executes youtube_dl as a script.
+    /// This functions captures stdout as it is created (stdout consists of
+    /// download progress updates). updateDownloadProgress(url, progressPercent) is called
+    /// on the watcher object.
+    /// In case of an error, progressPercent = -1 is reported.
+    Q_ASSERT(watcher != nullptr);
 #ifdef Q_OS_WIN
     const QString binPath = "youtube_dl_frozen\\__main__.exe";
     const QString outTemplate = destFolder + "\\%(title)s-%(id)s.%(ext)s";
@@ -65,7 +74,7 @@ void downloadVideo(const QString& url, const QString& format, const QString& des
     QStringList args;
     args << "youtube_dl/__main__.py" << "--format" << format << "--output" << outTemplate << url;
 #endif
-    QProcess* pythonProcess = new QProcess();
+    QScopedPointer<QProcess> pythonProcess(new QProcess());
     pythonProcess->setProcessChannelMode(QProcess::MergedChannels);
     pythonProcess->start(binPath, args);
 
@@ -114,6 +123,5 @@ void downloadVideo(const QString& url, const QString& format, const QString& des
     }
 
     pythonProcess->waitForFinished();
-    delete pythonProcess;
     qDebug() << "DOWNLOAD DONE:" << url;
 }

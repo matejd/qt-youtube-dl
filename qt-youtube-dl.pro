@@ -19,21 +19,3 @@ HEADERS += mainwindow.h \
 FORMS += mainwindow.ui
 
 win32:RC_FILE += qt-youtube-dl.rc
-
-# Copy proxy.py and youtube_dl package to build dir.
-#copypylib.commands = $(COPY_DIR) $$PWD/youtube_dl $$OUT_PWD
-#copypylib.depends = $$TARGET
-#copyproxy.commands = $(COPY_DIR) $$PWD/proxy.py $$OUT_PWD
-#first.depends = $(first) copypylib copyproxy
-#first.depends = $(first) copypylib
-#export(first.depends)
-#export(copypylib.commands)
-#export(copyproxy.commands)
-#QMAKE_EXTRA_TARGETS += first copypylib copyproxy
-
-#copypylib.path = $$OUT_PWD/youtube_dl
-#copypylib.files = youtube_dl/*
-#INSTALLS += copypylib
-
-#DISTFILES += \
-#    proxy.py

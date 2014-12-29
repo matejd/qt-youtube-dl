@@ -10,12 +10,13 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QCloseEvent>
+#include <QDebug>
 
-QTextEdit* MainWindow::s_logWidget = nullptr;
-
-MainWindow::MainWindow(QWidget* parent) :
+MainWindow::MainWindow(QWidget* parent, QTextEdit* logWidget) :
     QMainWindow(parent),
-    m_ui(new Ui::MainWindow)
+    m_ui(new Ui::MainWindow),
+    m_logWidget(logWidget)
 {
     m_ui->setupUi(this);
     m_ui->statusTableWidget->setColumnCount(3);
@@ -33,18 +34,22 @@ MainWindow::MainWindow(QWidget* parent) :
     m_downloadWizard->setFixedSize(QSize(800, 400));
     m_downloadWizard->setModal(true);
     connect(m_downloadWizard, SIGNAL(finished(int)), this, SLOT(onDownloadWizardFinished(int)));
-
-    s_logWidget = new QTextEdit();
-    s_logWidget->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    s_logWidget->resize(400, 600);
-    s_logWidget->setWindowTitle("Log");
 }
 
 MainWindow::~MainWindow()
 {
-    delete s_logWidget;
+    for (Youtubedl* process: m_runningDownloadProcesses)
+        delete process;
+
     delete m_downloadWizard;
     delete m_ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (m_logWidget && m_logWidget->isVisible())
+        m_logWidget->hide();
+    event->accept();
 }
 
 void MainWindow::on_downloadButton_clicked()
@@ -83,13 +88,13 @@ void MainWindow::onDownloadWizardFinished(int result)
 
     qDebug() << "DOWNLOADING:" << url << " " << format << " " << folder;
     m_urlRow[url] = destRow;
-    QtConcurrent::run([=] {
-        // Run in a background thread.
-        downloadVideo(url, format, folder, this);
-    });
+    Youtubedl* youtubedl = new Youtubedl();
+    m_runningDownloadProcesses.append(youtubedl);
+    connect(youtubedl, SIGNAL(downloadProgressUpdated(QString, int)), this, SLOT(onDownloadProgressUpdated(QString, int)));
+    youtubedl->downloadVideo(url, format, folder);
 }
 
-void MainWindow::updateDownloadProgress(QString url, int progressPercent)
+void MainWindow::onDownloadProgressUpdated(QString url, int progressPercent)
 {
     if (!m_urlRow.contains(url)) {
         qDebug() << "UNKNOWN URL:" << url;
@@ -119,8 +124,10 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionLog_triggered()
 {
-    if (s_logWidget->isVisible())
-        s_logWidget->hide();
+    if (m_logWidget == nullptr)
+        return;
+    if (m_logWidget->isVisible())
+        m_logWidget->hide();
     else
-        s_logWidget->show();
+        m_logWidget->show();
 }

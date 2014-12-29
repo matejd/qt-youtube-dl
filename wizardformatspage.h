@@ -8,7 +8,6 @@
 #include <QWizard>
 #include <QWizardPage>
 #include <QTimer>
-#include <QtConcurrent>
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QRadioButton>
@@ -25,6 +24,7 @@ private:
     QGroupBox* m_formatsGroupBox = nullptr;
     QLineEdit* m_hiddenFormatEdit = nullptr;
     QMap<QObject*, QString> m_radioFormat; // Mapping radioButton => formatId.
+    Youtubedl* m_youtubedl = nullptr;
 
 public:
     explicit WizardFormatsPage(QWidget* p = nullptr): QWizardPage(p)
@@ -44,6 +44,15 @@ public:
         mainLayout->addWidget(m_scrollArea);
         mainLayout->addWidget(m_hiddenFormatEdit);
         setLayout(mainLayout);
+
+        m_youtubedl = new Youtubedl();
+        connect(m_youtubedl, SIGNAL(formatsAvailable(QList<VideoFormat>)),
+                this, SLOT(formatsAvailable(QList<VideoFormat>)));
+    }
+
+    ~WizardFormatsPage()
+    {
+        delete m_youtubedl;
     }
 
     // Called when Next is clicked on the first page.
@@ -86,11 +95,7 @@ private slots:
         nextButton->setEnabled(false);
         cancelButton->setEnabled(false);
         finishButton->setEnabled(false);
-        QtConcurrent::run([=] {
-            // Run in a background thread.
-            const QList<VideoFormat> formats = getVideoFormats(url);
-            QMetaObject::invokeMethod(this, "formatsAvailable", Qt::QueuedConnection, Q_ARG(QList<VideoFormat>, formats));
-        });
+        m_youtubedl->getAvailableFormats(url);
     }
 
     void formatsAvailable(QList<VideoFormat> formats)

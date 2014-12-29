@@ -1,9 +1,9 @@
 #ifndef YOUTUBEDL_H
 #define YOUTUBEDL_H
 
-#include <QMetaType>
 #include <QList>
 #include <QString>
+#include <QProcess>
 
 struct VideoFormat
 {
@@ -11,10 +11,33 @@ struct VideoFormat
     QString description;
 };
 
-Q_DECLARE_METATYPE(QList<VideoFormat>)
+class Youtubedl : public QObject
+{
+    Q_OBJECT
 
-// Should be called in a background thread.
-QList<VideoFormat> getVideoFormats(const QString& url);
-void downloadVideo(const QString& url, const QString& format, const QString& destFolder, QObject* watcher);
+public:
+    Youtubedl();
+    ~Youtubedl();
+
+    void getAvailableFormats(const QString& url);
+    void downloadVideo(const QString& url, const QString& format, const QString& destFolder);
+
+signals:
+    void formatsAvailable(QList<VideoFormat> formats);
+    void downloadProgressUpdated(QString url, int progressPercent);
+
+private slots:
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessReadyRead();
+
+private:
+    void killIfRunning();
+    void processFormats();
+
+    QProcess* m_process;
+    QString m_processOutput;
+    QString m_url;
+    int m_unmatchedOffset;
+};
 
 #endif // YOUTUBEDL_H

@@ -97,6 +97,12 @@ void Youtubedl::processFormats()
 
 void Youtubedl::downloadVideo(const QString& url, const QString& format, const QString& destFolder)
 {
+    /// Starts another process which executes youtube_dl as a script.
+    /// Captures stdout as it is created (stdout consists of
+    /// download progress updates). downloadProgressUpdated(url, progressPercent)
+    /// signal is emitted on updates.
+    /// In case of an error, progressPercent = -1 is reported.
+    ///
     killIfRunning();
 
 #ifdef Q_OS_WIN
@@ -120,12 +126,6 @@ void Youtubedl::downloadVideo(const QString& url, const QString& format, const Q
 
 void Youtubedl::onProcessReadyRead()
 {
-    /// Starts another process which executes youtube_dl as a script.
-    /// Captures stdout as it is created (stdout consists of
-    /// download progress updates). downloadProgressUpdated(url, progressPercent)
-    /// signal is emitted on updates.
-    /// In case of an error, progressPercent = -1 is reported.
-    ///
     const QTextCodec* utfCodec = QTextCodec::codecForName("UTF-8");
     const QRegularExpression downloadRE("\\[download\\]\\s+(\\d+)\\.");
     const QString newData = utfCodec->toUnicode(m_process->readAll());
